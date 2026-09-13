@@ -1,0 +1,20 @@
+[
+  { "id": "ADR-001", "team_id": "loja", "status": "accepted", "title": "Valores monetários em centavos inteiros",
+    "context": "Cálculos com float em reais geraram diferenças de 1 centavo em relatórios do financeiro. O Vendure já trabalha em minor units (centavos).",
+    "decision": "Todo valor monetário é inteiro em centavos. Arredondar com Math.round somente no fim do cálculo. Nunca 'reais * 100' nem 'centavos / 100' com float." },
+  { "id": "ADR-002", "team_id": "loja", "status": "accepted", "title": "Teto de 30% de desconto para promoções percentuais",
+    "context": "Em 2022 um cupom de 100% ficou ativo num fim de semana e a loja perdeu R$ 40 mil.",
+    "decision": "Promoções percentuais aplicam no máximo 30%, mesmo que o admin configure mais. O teto vive no código do plugin cupons (action desconto_percentual_com_teto), não na configuração." },
+  { "id": "ADR-003", "team_id": "loja", "status": "accepted", "title": "Sem dependências novas de runtime além do Vendure",
+    "context": "Cada dependência nova passa pela política de supply chain da empresa e atrasa o deploy.",
+    "decision": "Nenhuma dependência de runtime além das que o Vendure já traz. Dependência nova só com aprovação registrada em ADR." },
+  { "id": "ADR-004", "team_id": "loja", "status": "proposed", "title": "Descontos por categoria via facets",
+    "context": "O marketing quer promoção por categoria sem deploy.",
+    "decision": "Proposta: usar a condition nativa at_least_n_with_facets com facet 'categoria'. Ainda não aceita." },
+  { "id": "ADR-005", "team_id": "loja", "status": "deprecated", "title": "Descontos calculados em reais com float",
+    "context": "Substituída pela ADR-001.",
+    "decision": "Não usar." },
+  { "id": "ADR-006", "team_id": "loja", "status": "accepted", "title": "src/misc/preco.ts congelado; frete da loja vem da Promotion",
+    "context": "frete() em src/misc/preco.ts alimenta a planilha mensal do financeiro. Em 2025 uma mudança ali para atender uma campanha desalinhou três meses de relatório.",
+    "decision": "Não alterar src/misc/preco.ts. Frete grátis e descontos de frete na loja são Promotions com as actions e conditions nativas (free_shipping, minimum_order_amount) mais cupom_unico. Se o relatório precisar refletir um cupom, quem decide é o financeiro, em ADR própria." }
+]

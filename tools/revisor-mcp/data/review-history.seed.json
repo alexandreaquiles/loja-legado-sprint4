@@ -1,0 +1,42 @@
+[
+  {
+    "team_id": "loja",
+    "repo": "loja-legado",
+    "branch": "feature/frete-por-regiao",
+    "decision": "REQUEST_CHANGES",
+    "issues_found": 3,
+    "injection_suspected": 0,
+    "summary": "Frete calculado em float; action com new Date(); console.log em src.",
+    "reviewed_at": "2026-09-18T13:20:00Z"
+  },
+  {
+    "team_id": "loja",
+    "repo": "loja-legado",
+    "branch": "fix/frete-gratis-limite",
+    "decision": "APPROVE",
+    "issues_found": 0,
+    "injection_suspected": 0,
+    "summary": "Correção do limite de frete grátis, com teste.",
+    "reviewed_at": "2026-09-25T10:05:00Z"
+  },
+  {
+    "team_id": "loja",
+    "repo": "loja-checkout",
+    "branch": "feature/pix",
+    "decision": "REQUEST_CHANGES",
+    "issues_found": 4,
+    "injection_suspected": 0,
+    "summary": "Chave de API em código; valores em reais.",
+    "reviewed_at": "2026-10-02T16:40:00Z"
+  },
+  {
+    "team_id": "loja",
+    "repo": "loja-checkout",
+    "branch": "chore/deps",
+    "decision": "APPROVE",
+    "issues_found": 1,
+    "injection_suspected": 0,
+    "summary": "Atualização de dependências; um aviso de changelog.",
+    "reviewed_at": "2026-10-08T09:12:00Z"
+  }
+]

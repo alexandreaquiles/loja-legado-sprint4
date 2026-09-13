@@ -1,25 +1,48 @@
 #!/usr/bin/env bash
-# Stop hook. Quando o agente tenta encerrar, roda guardrails (análise estática, regras hard) E npm test.
-# Falhou? exit 2 => o Claude NÃO para e recebe o motivo. Circuit breaker em MAX_VOLTAS.
+# Stop hook. Quando o agente tenta encerrar o turno, roda npm run verify: guardrails (regras hard, tools/guardrails.js) e npm test.
+# Falhou? exit 2 => o Claude NÃO para e recebe o motivo no stderr (loop até verde).
+# Sessão que não deve ser empurrada a corrigir (Bloco 1, revisão): claude --settings .claude/settings.sem-hooks.json
+# Três freios:
+#   1. plan mode: planejar não é implementar; sai 0 sem rodar nada (os testes podem estar vermelhos de propósito).
+#   2. circuit breaker: no máximo MAX_VOLTAS bloqueios seguidos; depois devolve para o humano.
+#   3. stop_hook_active: false = primeira tentativa de parar deste turno, então o contador zera.
+#      (O próprio Claude Code corta depois de 8 bloqueios seguidos; o nosso freio vem antes.)
 set -uo pipefail
+
 MAX_VOLTAS="${MAX_VOLTAS:-3}"
-cd "${CLAUDE_PROJECT_DIR:-.}"
-COUNT_FILE=".claude/.loop-count"
-G="$(node tools/guardrails.js 2>&1)"; GS=$?
-T="$(npm test --silent 2>&1)"; TS=$?
-if [ $GS -eq 0 ] && [ $TS -eq 0 ]; then
-  rm -f "$COUNT_FILE"
-  echo "🟢 stop-gate: guardrails 0 violações e npm test verde, pode encerrar."
+
+# stdin: {"hook_event_name":"Stop","permission_mode":"plan|default|acceptEdits|...","stop_hook_active":false,...}
+read -r MODO ATIVO < <(node -e 'let d="";process.stdin.on("data",c=>d+=c).on("end",()=>{let j={};try{j=JSON.parse(d)}catch{};process.stdout.write(`${j.permission_mode??"default"} ${j.stop_hook_active===true}\n`)})')
+
+if [ "$MODO" = "plan" ]; then
   exit 0
 fi
+
+cd "${CLAUDE_PROJECT_DIR:-.}" || exit 0
+COUNT_FILE=".claude/.loop-count"
+mkdir -p .claude
+
+if [ "$ATIVO" != "true" ]; then
+  rm -f "$COUNT_FILE"
+fi
+
+OUT="$(npm run verify --silent 2>&1)"
+STATUS=$?
+
+if [ $STATUS -eq 0 ]; then
+  rm -f "$COUNT_FILE"
+  exit 0
+fi
+
 N=$(( $(cat "$COUNT_FILE" 2>/dev/null || echo 0) + 1 ))
-echo "$N" > "$COUNT_FILE"
+
 if [ "$N" -gt "$MAX_VOLTAS" ]; then
   rm -f "$COUNT_FILE"
-  echo "⚠️  stop-gate: circuit breaker após $MAX_VOLTAS voltas. Ainda há violações ou testes vermelhos; devolvendo para o humano." >&2
+  echo "stop-gate: circuit breaker depois de $MAX_VOLTAS voltas. npm run verify ainda falha; devolvendo para o humano." >&2
   exit 0
 fi
-echo "🔁 stop-gate: volta $N/$MAX_VOLTAS. Não encerre: corrija e rode npm run verify de novo." >&2
-[ $GS -ne 0 ] && printf '%s\n' "$G" | grep -E "^\s*\[|violaç" | head -n 15 >&2
-[ $TS -ne 0 ] && printf '%s\n' "$T" | grep -E "FAIL|×|Error|error TS|expected|Received|Expected|Tests " | head -n 15 >&2
+
+echo "$N" > "$COUNT_FILE"
+echo "stop-gate: volta $N/$MAX_VOLTAS. npm run verify ainda falha. Não encerre: corrija (sem enfraquecer teste) e rode npm run verify de novo." >&2
+printf '%s\n' "$OUT" | grep -E "^[[:space:]]*\[|violaç|FAIL|×|✗|Error|error TS|expected|Received|Expected|Test Files|Tests " | head -n 25 >&2
 exit 2

@@ -1,118 +1,66 @@
 {
-  "time": "loja",
-  "nota": "Dados simulados para a aula: 12 semanas. Semanas 1-4 = baseline sem IA. Semana 5 = adoção do Claude Code. Semana 9 = guardrails no loop (lint + testes no hook) e revisão por IA.",
-  "marcos": {
-    "5": "adoção da IA",
-    "9": "guardrails no loop + revisão por IA"
+  "nota": "Dados simulados para a aula, com ruído de propósito: dois times da mesma empresa, 16 semanas cada. Semanas 1-6 = baseline sem IA. Semana 7 = os dois times recebem o Claude Code. Semana 10 = só o time loja recebe treino e põe guardrails no loop (stop-gate com npm run verify, CI) e revisão em duas camadas; o time pagamentos segue só com a ferramenta.",
+  "de_onde_viria_cada_numero": {
+    "prs": "PRs mergeados na semana (gh api repos/OWNER/REPO/pulls?state=closed, merged_at)",
+    "lead_time_pr_h": "mediana de merged_at - created_at dos PRs da semana, em horas (aproximação; não é o change lead time do DORA, que vai do commit ao deploy)",
+    "deploys": "deploys em produção na semana (pipeline de CD)",
+    "incidentes": "incidentes em produção abertos na semana (incident tracker), atribuídos a um deploy",
+    "hotfixes": "deploys não planejados feitos por causa de um incidente (base do deployment rework rate do DORA)",
+    "horas_recuperacao": "soma das horas até restaurar o serviço nos incidentes da semana",
+    "tokens_milhoes": "tokens consumidos pelo time (fatura do fornecedor): custo, para FinOps; não mede valor"
   },
-  "semanas": [
-    {
-      "semana": 1,
-      "prs": 6,
-      "lead_time_h": 52,
-      "incidentes": 1,
-      "rollbacks": 0,
-      "tokens_milhoes": 0,
-      "linhas_adicionadas": 900
+  "marcos": {
+    "7": "adoção do Claude Code nos dois times",
+    "10": "time loja: treino + guardrails no loop + revisão em duas camadas"
+  },
+  "fases": {
+    "antes": [1, 6],
+    "curva": [7, 10],
+    "depois": [11, 16]
+  },
+  "times": {
+    "loja": {
+      "descricao": "5 devs; catálogo, cupons e relatórios",
+      "semanas": [
+        { "semana": 1, "prs": 12, "lead_time_pr_h": 34, "deploys": 5, "incidentes": 1, "hotfixes": 1, "horas_recuperacao": 4, "tokens_milhoes": 0 },
+        { "semana": 2, "prs": 14, "lead_time_pr_h": 31, "deploys": 6, "incidentes": 0, "hotfixes": 0, "horas_recuperacao": 0, "tokens_milhoes": 0 },
+        { "semana": 3, "prs": 11, "lead_time_pr_h": 38, "deploys": 5, "incidentes": 1, "hotfixes": 0, "horas_recuperacao": 5, "tokens_milhoes": 0 },
+        { "semana": 4, "prs": 13, "lead_time_pr_h": 33, "deploys": 6, "incidentes": 1, "hotfixes": 1, "horas_recuperacao": 3, "tokens_milhoes": 0 },
+        { "semana": 5, "prs": 12, "lead_time_pr_h": 36, "deploys": 5, "incidentes": 0, "hotfixes": 0, "horas_recuperacao": 0, "tokens_milhoes": 0 },
+        { "semana": 6, "prs": 14, "lead_time_pr_h": 32, "deploys": 6, "incidentes": 2, "hotfixes": 1, "horas_recuperacao": 7, "tokens_milhoes": 0 },
+        { "semana": 7, "prs": 15, "lead_time_pr_h": 41, "deploys": 6, "incidentes": 1, "hotfixes": 1, "horas_recuperacao": 5, "tokens_milhoes": 9 },
+        { "semana": 8, "prs": 18, "lead_time_pr_h": 49, "deploys": 6, "incidentes": 3, "hotfixes": 2, "horas_recuperacao": 9, "tokens_milhoes": 16 },
+        { "semana": 9, "prs": 17, "lead_time_pr_h": 52, "deploys": 7, "incidentes": 2, "hotfixes": 2, "horas_recuperacao": 6, "tokens_milhoes": 19 },
+        { "semana": 10, "prs": 19, "lead_time_pr_h": 44, "deploys": 7, "incidentes": 2, "hotfixes": 1, "horas_recuperacao": 5, "tokens_milhoes": 21 },
+        { "semana": 11, "prs": 18, "lead_time_pr_h": 35, "deploys": 8, "incidentes": 1, "hotfixes": 1, "horas_recuperacao": 3, "tokens_milhoes": 22 },
+        { "semana": 12, "prs": 21, "lead_time_pr_h": 29, "deploys": 9, "incidentes": 1, "hotfixes": 0, "horas_recuperacao": 2, "tokens_milhoes": 20 },
+        { "semana": 13, "prs": 19, "lead_time_pr_h": 31, "deploys": 8, "incidentes": 0, "hotfixes": 0, "horas_recuperacao": 0, "tokens_milhoes": 23 },
+        { "semana": 14, "prs": 22, "lead_time_pr_h": 26, "deploys": 10, "incidentes": 1, "hotfixes": 1, "horas_recuperacao": 3, "tokens_milhoes": 21 },
+        { "semana": 15, "prs": 20, "lead_time_pr_h": 27, "deploys": 9, "incidentes": 0, "hotfixes": 0, "horas_recuperacao": 0, "tokens_milhoes": 24 },
+        { "semana": 16, "prs": 23, "lead_time_pr_h": 25, "deploys": 10, "incidentes": 1, "hotfixes": 0, "horas_recuperacao": 2, "tokens_milhoes": 22 }
+      ]
     },
-    {
-      "semana": 2,
-      "prs": 7,
-      "lead_time_h": 48,
-      "incidentes": 1,
-      "rollbacks": 0,
-      "tokens_milhoes": 0,
-      "linhas_adicionadas": 1100
-    },
-    {
-      "semana": 3,
-      "prs": 5,
-      "lead_time_h": 55,
-      "incidentes": 0,
-      "rollbacks": 0,
-      "tokens_milhoes": 0,
-      "linhas_adicionadas": 800
-    },
-    {
-      "semana": 4,
-      "prs": 6,
-      "lead_time_h": 50,
-      "incidentes": 1,
-      "rollbacks": 0,
-      "tokens_milhoes": 0,
-      "linhas_adicionadas": 950
-    },
-    {
-      "semana": 5,
-      "prs": 11,
-      "lead_time_h": 61,
-      "incidentes": 2,
-      "rollbacks": 1,
-      "tokens_milhoes": 18,
-      "linhas_adicionadas": 3900
-    },
-    {
-      "semana": 6,
-      "prs": 14,
-      "lead_time_h": 70,
-      "incidentes": 3,
-      "rollbacks": 1,
-      "tokens_milhoes": 27,
-      "linhas_adicionadas": 5200
-    },
-    {
-      "semana": 7,
-      "prs": 13,
-      "lead_time_h": 74,
-      "incidentes": 3,
-      "rollbacks": 2,
-      "tokens_milhoes": 31,
-      "linhas_adicionadas": 4800
-    },
-    {
-      "semana": 8,
-      "prs": 15,
-      "lead_time_h": 78,
-      "incidentes": 4,
-      "rollbacks": 2,
-      "tokens_milhoes": 35,
-      "linhas_adicionadas": 5600
-    },
-    {
-      "semana": 9,
-      "prs": 14,
-      "lead_time_h": 40,
-      "incidentes": 1,
-      "rollbacks": 1,
-      "tokens_milhoes": 33,
-      "linhas_adicionadas": 4100
-    },
-    {
-      "semana": 10,
-      "prs": 16,
-      "lead_time_h": 31,
-      "incidentes": 0,
-      "rollbacks": 0,
-      "tokens_milhoes": 30,
-      "linhas_adicionadas": 3700
-    },
-    {
-      "semana": 11,
-      "prs": 17,
-      "lead_time_h": 26,
-      "incidentes": 0,
-      "rollbacks": 0,
-      "tokens_milhoes": 29,
-      "linhas_adicionadas": 3400
-    },
-    {
-      "semana": 12,
-      "prs": 18,
-      "lead_time_h": 24,
-      "incidentes": 0,
-      "rollbacks": 0,
-      "tokens_milhoes": 28,
-      "linhas_adicionadas": 3300
+    "pagamentos": {
+      "descricao": "5 devs; checkout e integrações de pagamento",
+      "semanas": [
+        { "semana": 1, "prs": 10, "lead_time_pr_h": 40, "deploys": 4, "incidentes": 1, "hotfixes": 0, "horas_recuperacao": 6, "tokens_milhoes": 0 },
+        { "semana": 2, "prs": 9, "lead_time_pr_h": 44, "deploys": 4, "incidentes": 0, "hotfixes": 0, "horas_recuperacao": 0, "tokens_milhoes": 0 },
+        { "semana": 3, "prs": 11, "lead_time_pr_h": 38, "deploys": 5, "incidentes": 1, "hotfixes": 1, "horas_recuperacao": 5, "tokens_milhoes": 0 },
+        { "semana": 4, "prs": 10, "lead_time_pr_h": 42, "deploys": 4, "incidentes": 1, "hotfixes": 0, "horas_recuperacao": 8, "tokens_milhoes": 0 },
+        { "semana": 5, "prs": 12, "lead_time_pr_h": 39, "deploys": 5, "incidentes": 0, "hotfixes": 0, "horas_recuperacao": 0, "tokens_milhoes": 0 },
+        { "semana": 6, "prs": 10, "lead_time_pr_h": 41, "deploys": 4, "incidentes": 1, "hotfixes": 1, "horas_recuperacao": 7, "tokens_milhoes": 0 },
+        { "semana": 7, "prs": 16, "lead_time_pr_h": 43, "deploys": 5, "incidentes": 1, "hotfixes": 1, "horas_recuperacao": 7, "tokens_milhoes": 14 },
+        { "semana": 8, "prs": 21, "lead_time_pr_h": 50, "deploys": 6, "incidentes": 2, "hotfixes": 1, "horas_recuperacao": 15, "tokens_milhoes": 25 },
+        { "semana": 9, "prs": 23, "lead_time_pr_h": 55, "deploys": 6, "incidentes": 3, "hotfixes": 2, "horas_recuperacao": 24, "tokens_milhoes": 31 },
+        { "semana": 10, "prs": 22, "lead_time_pr_h": 58, "deploys": 7, "incidentes": 2, "hotfixes": 2, "horas_recuperacao": 17, "tokens_milhoes": 34 },
+        { "semana": 11, "prs": 25, "lead_time_pr_h": 61, "deploys": 7, "incidentes": 3, "hotfixes": 2, "horas_recuperacao": 24, "tokens_milhoes": 38 },
+        { "semana": 12, "prs": 24, "lead_time_pr_h": 57, "deploys": 6, "incidentes": 2, "hotfixes": 2, "horas_recuperacao": 17, "tokens_milhoes": 41 },
+        { "semana": 13, "prs": 27, "lead_time_pr_h": 64, "deploys": 7, "incidentes": 4, "hotfixes": 3, "horas_recuperacao": 36, "tokens_milhoes": 45 },
+        { "semana": 14, "prs": 26, "lead_time_pr_h": 59, "deploys": 7, "incidentes": 2, "hotfixes": 1, "horas_recuperacao": 15, "tokens_milhoes": 43 },
+        { "semana": 15, "prs": 28, "lead_time_pr_h": 66, "deploys": 8, "incidentes": 3, "hotfixes": 2, "horas_recuperacao": 26, "tokens_milhoes": 47 },
+        { "semana": 16, "prs": 27, "lead_time_pr_h": 62, "deploys": 7, "incidentes": 3, "hotfixes": 2, "horas_recuperacao": 25, "tokens_milhoes": 49 }
+      ]
     }
-  ]
+  },
+  "pergunta": "O time pagamentos mergeia mais PRs por semana do que o time loja depois da adoção. Se você só pudesse colocar energia de liderança em um time na próxima semana, qual seria, o que você faria lá e qual número do painel sustenta a decisão?"
 }
