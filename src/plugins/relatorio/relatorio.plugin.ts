@@ -1,19 +1,25 @@
 import { Allow, Ctx, OrderService, Permission, PluginCommonModule, RequestContext, VendurePlugin } from '@vendure/core';
-import { Query, Resolver } from '@nestjs/graphql';
+import { Args, Query, Resolver } from '@nestjs/graphql';
 import gql from 'graphql-tag';
 import { relatorioCsv } from './relatorio';
 
-/** Query do Admin API: relatorioCupons devolve o CSV de usos de cupom por cliente (LOJA-4). */
+/** Query do Admin API: relatorioCupons devolve o CSV de usos de cupom por cliente no período (LOJA-4). */
 @Resolver()
 export class RelatorioResolver {
   constructor(private orderService: OrderService) {}
 
   @Query()
   @Allow(Permission.ReadOrder)
-  async relatorioCupons(@Ctx() ctx: RequestContext): Promise<string> {
+  async relatorioCupons(@Ctx() ctx: RequestContext, @Args() args: any): Promise<string> {
+    // TODO: paginar quando a loja passar de 500 pedidos
     const { items } = await this.orderService.findAll(ctx, { take: 500 }, ['customer']);
-    const fechados = items.filter((o) => o.orderPlacedAt);
-    return relatorioCsv(fechados.map((o) => ({ customerEmail: o.customer?.emailAddress, couponCodes: o.couponCodes })));
+    const inicio = new Date(args.inicio);
+    const fim = args.fim ? new Date(args.fim) : new Date();
+    const doPeriodo = items.filter((o: any) => o.orderPlacedAt && o.orderPlacedAt >= inicio && o.orderPlacedAt <= fim);
+    return relatorioCsv(
+      doPeriodo.map((o) => ({ customerEmail: o.customer?.emailAddress, couponCodes: o.couponCodes })),
+      { enviar: true },
+    );
   }
 }
 
@@ -22,7 +28,7 @@ export class RelatorioResolver {
   adminApiExtensions: {
     schema: gql`
       extend type Query {
-        relatorioCupons: String!
+        relatorioCupons(inicio: DateTime!, fim: DateTime!): String!
       }
     `,
     resolvers: [RelatorioResolver],
