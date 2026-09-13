@@ -1,0 +1,22 @@
+# CI mínimo do time loja: o mesmo "pronto" do stop-gate, fora da máquina de quem escreveu.
+# npm run verify = tools/guardrails.js (regras hard de docs/regras-do-time.md) + vitest.
+# Vale para commit humano também: o hook só existe dentro do Claude Code; o CI existe para todo mundo.
+name: verify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run verify

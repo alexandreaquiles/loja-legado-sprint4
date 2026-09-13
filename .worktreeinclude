@@ -1,2 +1,3 @@
 .env
 vendure.sqlite
+tools/revisor-mcp/node_modules

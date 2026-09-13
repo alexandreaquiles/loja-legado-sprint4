@@ -13,8 +13,11 @@
     "test": "vitest run --config vitest.config.mts",
     "test:watch": "vitest --config vitest.config.mts",
     "setup": "node scripts/setup.js",
+    "conferir": "node scripts/conferir.mjs",
     "smoke:board": "node tools/board-mcp/smoke.mjs",
+    "smoke:revisor": "node tools/revisor-mcp/scripts/smoke.mjs --pr=gabarito",
     "verify": "node tools/guardrails.js && vitest run --config vitest.config.mts",
+    "guardrails": "node tools/guardrails.js",
     "metricas": "node tools/metricas.mjs"
   },
   "dependencies": {

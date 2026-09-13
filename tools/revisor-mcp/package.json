@@ -1,0 +1,19 @@
+{
+  "name": "revisor-mcp",
+  "version": "1.0.0",
+  "description": "MCP server customizado que dá contexto de time (regras, ADRs, histórico) ao agente na hora de revisar um PR",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "start:inchado": "node src/index-inchado.js",
+    "inspector": "npx @modelcontextprotocol/inspector node src/index.js",
+    "inspector:inchado": "npx @modelcontextprotocol/inspector node src/index-inchado.js",
+    "smoke": "node scripts/smoke.mjs",
+    "reset-history": "node scripts/reset-history.mjs"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^4.5.4"
+  }
+}

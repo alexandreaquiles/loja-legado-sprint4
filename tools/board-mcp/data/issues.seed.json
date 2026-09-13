@@ -21,7 +21,10 @@
         "Action devolve negativo em centavos",
         "Um cupom por pedido"
       ],
-      "constraints": [],
+      "constraints": [
+        "Não alterar src/misc/preco.ts.",
+        "Não reimplementar o que a Promotion nativa já faz (código, datas, limites de uso)."
+      ],
       "stack": "Vendure 3.7, TypeScript, vitest",
       "acceptance": [
         "test/cupom.test.ts verde"
@@ -49,6 +52,7 @@
       "src/plugins/regiao/regiao.plugin.ts",
       "src/plugins/regiao/promocoes.ts",
       "src/plugins/regiao/regras.ts",
+      "src/plugins/compartilhado/uf.ts",
       "test/regiao.test.ts"
     ],
     "spec": {
@@ -58,24 +62,25 @@
         "R2. Argumento `estados` (string): siglas separadas por vírgula, ex.: \"SP,RJ,MG,ES,PR,SC,RS\". Comparação com trim e maiúsculas: \" sp \" vale como SP.",
         "R3. check devolve true quando order.shippingAddress.province (sigla), normalizada, está na lista.",
         "R4. Sem endereço de entrega, ou province vazia, devolve false (o pedido ainda não escolheu entrega).",
-        "R5. A lógica de normalização e pertencimento fica em regras.ts, pura, sem importar o Vendure.",
+        "R5. A normalização da sigla (trim e maiúsculas) fica em src/plugins/compartilhado/uf.ts, função normalizarUf, pura e sem Vendure, para outros plugins usarem (se o arquivo já existir, reutilize); a regra de pertencimento fica em src/plugins/regiao/regras.ts, também pura.",
         "R6. code em snake_case, description em pt_BR e en; a condition SOMA às nativas via config.promotionOptions.promotionConditions."
       ],
       "constraints": [
         "Não alterar src/plugins/cupons/ nem src/vendure-config.ts.",
         "Não criar action de frete: usar a free_shipping nativa na promoção do dashboard.",
-        "Não instalar dependências; não tocar em vendure.sqlite nem criar migration."
+        "Não instalar dependências; não tocar em vendure.sqlite nem criar migration.",
+        "Não criar index.ts em src/plugins/compartilhado/: não é plugin (o registro.ts só liga pastas com index.ts)."
       ],
       "stack": "Vendure 3.7, TypeScript, vitest com ctx e order falsos (ver test/cupom.test.ts e node_modules/@vendure/core/dist/config/promotion/conditions/).",
       "acceptance": [
         "test/regiao.test.ts com pelo menos: R3 SP na lista; R3 BA fora da lista; R2 \" sp \" normalizado; R4 sem shippingAddress; R6 registro soma à lista nativa.",
         "npm test verde, incluindo os 15 testes existentes."
       ],
-      "verification": "npm test"
+      "verification": "npm test && npx tsc --noEmit"
     },
     "comments": [
       {
-        "body": "Mergeado em main na Sprint 3.",
+        "body": "Mergeado em main na Sprint 3 (git merge worktree-loja-2). 5 testes em test/regiao.test.ts; normalizarUf em src/plugins/compartilhado/uf.ts.",
         "at": "2026-10-29T12:00:00Z"
       }
     ]
@@ -84,7 +89,7 @@
     "id": "LOJA-3",
     "title": "US-03 Cupom só na primeira compra",
     "state": "done",
-    "priority": "high",
+    "priority": "medium",
     "labels": [
       "backend"
     ],
@@ -116,12 +121,12 @@
         "test/primeira-compra.test.ts cobrindo R2, R4 (com e sem pedido anterior), o pedido atual ignorado (R3) e R6.",
         "npm test verde."
       ],
-      "verification": "npm test"
+      "verification": "npm test && npx tsc --noEmit"
     },
     "comments": [
       {
-        "body": "Mergeado em main na Sprint 3.",
-        "at": "2026-10-29T12:00:00Z"
+        "body": "Spec completada pelo time a partir do rascunho da PO. Mergeado em main na Sprint 3 (git merge worktree-loja-3). 5 testes em test/primeira-compra.test.ts.",
+        "at": "2026-10-29T12:30:00Z"
       }
     ]
   },
@@ -143,29 +148,33 @@
       "test/relatorio.test.ts"
     ],
     "spec": {
-      "context": "O financeiro quer exportar quantas vezes cada cliente usou cada cupom. Os dados já existem: todo Order tem couponCodes e customer. Entra como query no Admin API (relatorioCupons: String), devolvendo CSV.",
+      "context": "O financeiro quer conciliar, todo mês, quantas vezes cada cliente usou cada cupom. Os dados já existem: todo Order tem couponCodes, customer e orderPlacedAt. Entra como query no Admin API (relatorioCupons), devolvendo CSV que o financeiro baixa e abre na planilha. Pedidos novos já guardam o código canônico do Vendure (\"ALURA10\"); os migrados do sistema antigo, em 2024, guardam o código como o cliente digitou (\" alura10\"). A loja tem milhares de pedidos por mês.",
       "rules": [
-        "R1. Criar src/plugins/relatorio/relatorio.ts exportando relatorioCsv(pedidos) que recebe uma lista de { customerEmail, couponCodes } e devolve CSV com cabeçalho cliente,codigo,usos.",
-        "R2. Linhas ordenadas por cliente e depois por codigo; codigo normalizado com trim e maiúsculas.",
-        "R3. Lista vazia devolve só o cabeçalho.",
-        "R4. O plugin expõe a query relatorioCupons no Admin API, que lê os pedidos com orderPlacedAt via OrderService e chama relatorioCsv."
+        "R1. src/plugins/relatorio/relatorio.ts exporta relatorioCsv(pedidos), que recebe uma lista de { customerEmail, couponCodes } e devolve CSV com exatamente as colunas cliente,codigo,usos (cabeçalho na primeira linha, separador vírgula, linhas com \\n).",
+        "R2. O código do cupom é normalizado com trim e maiúsculas antes de contar: \" alura10\" e \"ALURA10\" são o mesmo cupom. Código vazio depois de normalizar não conta.",
+        "R3. Linhas ordenadas por cliente e depois por código. Lista vazia devolve só o cabeçalho. Pedido sem e-mail de cliente (visitante) fica fora.",
+        "R4. CSV seguro para planilha: campo com vírgula, aspas ou quebra de linha vai entre aspas (aspas internas dobradas); campo que começa com =, +, -, @, tab ou CR recebe um apóstrofo (') na frente, para a planilha não executar fórmula.",
+        "R5. O plugin expõe no Admin API a query relatorioCupons(inicio: DateTime!, fim: DateTime!): String!, com @Allow(Permission.ReadOrder). Ela lê pelo OrderService todos os pedidos com orderPlacedAt no período, filtrando na consulta (filter orderPlacedAt between) e percorrendo todas as páginas (skip/take até totalItems), com a relação customer, e chama relatorioCsv."
       ],
       "constraints": [
-        "Sem dependências (nada de biblioteca de CSV).",
-        "Dinheiro, se aparecer, em centavos inteiros.",
-        "Não alterar src/plugins/primeira-compra/."
+        "Sem dependências novas (ADR-003): nada de biblioteca de CSV.",
+        "O relatório não sai da loja: nenhuma chamada de rede e nenhum dado de cliente (e-mail) enviado a outro sistema (R-02 e LGPD). O financeiro baixa pelo Admin API.",
+        "Nenhum segredo no código nem em log (R-02, R-05).",
+        "Só as colunas da spec: nada de valor calculado (se um dia houver dinheiro, em centavos inteiros, ADR-001).",
+        "Não alterar src/plugins/primeira-compra/, src/vendure-config.ts nem src/misc/."
       ],
-      "stack": "Vendure 3.7, TypeScript, vitest.",
+      "stack": "Vendure 3.7 (OrderService.findAll(ctx, { filter, skip, take }, ['customer']) devolve { items, totalItems }), TypeScript, vitest. Nos testes, um OrderService falso que devolve páginas e registra as options recebidas; nada de banco nem rede.",
       "acceptance": [
-        "test/relatorio.test.ts com R1, R2 e R3.",
-        "npm test verde."
+        "test/relatorio.test.ts cobrindo R1, R2 (\" alura10\" e \"ALURA10\" somam), R3 (ordem, lista vazia, visitante) e R4 (vírgula e aspas; fórmula neutralizada).",
+        "test/relatorio.test.ts cobrindo R5 pelo resolver, com um OrderService falso de mais de uma página: nenhum pedido do período fica de fora e o filtro de data vai na consulta.",
+        "npm run verify verde (guardrails 0 violações e testes), sem teste pulado."
       ],
-      "verification": "npm test"
+      "verification": "npm run verify && npx tsc --noEmit"
     },
     "comments": [
       {
-        "body": "Implementado com IA na branch feature/relatorio-descontos. Testes verdes.",
-        "at": "2026-11-02T09:00:00Z"
+        "body": "Implementado com IA na branch feature/relatorio-descontos. Testes verdes, pronto para revisão.",
+        "at": "2026-11-10T18:00:00Z"
       }
     ]
   },
@@ -209,10 +218,10 @@
       "test/regiao.test.ts"
     ],
     "spec": {
-      "context": "Depois da LOJA-2, a logística quer um ShippingCalculator frete_por_regiao com valor diferente por região, reaproveitando a normalização de siglas de regras.ts. ATENÇÃO: toca os mesmos arquivos da LOJA-2; nunca rodar em paralelo com ela.",
+      "context": "Depois da LOJA-2, a logística quer um ShippingCalculator frete_por_regiao com valor diferente por região, reaproveitando a lista de estados de src/plugins/regiao/regras.ts e o normalizarUf de src/plugins/compartilhado/uf.ts. ATENÇÃO: toca os mesmos arquivos da LOJA-2; nunca rodar em paralelo com ela.",
       "rules": [
         "R1. ShippingCalculator frete_por_regiao com argumentos sulSudeste e demais (centavos inteiros).",
-        "R2. Reutiliza a normalização de regras.ts; registrado pelo mesmo plugin regiao em shippingOptions.shippingCalculators, somando aos nativos."
+        "R2. Reutiliza listaDeEstados (regras.ts) e normalizarUf (compartilhado/uf.ts); registrado pelo mesmo plugin regiao em shippingOptions.shippingCalculators, somando aos nativos."
       ],
       "constraints": [
         "Manter os testes atuais de test/regiao.test.ts verdes."
@@ -223,6 +232,41 @@
         "npm test verde."
       ],
       "verification": "npm test"
+    },
+    "comments": []
+  },
+  {
+    "id": "LOJA-7",
+    "title": "US-07 Sigla de estado normalizada em um lugar só",
+    "state": "todo",
+    "priority": "high",
+    "labels": [
+      "backend"
+    ],
+    "blocked_by": [],
+    "files": [
+      "src/plugins/compartilhado/uf.ts",
+      "test/uf.test.ts"
+    ],
+    "spec": {
+      "context": "O marketing cadastrou promoções com \" sp\" e \"Sp\" e elas não valem em todo lugar: cada trecho de código trata a sigla do estado do seu jeito, e ninguém confere se a sigla existe. O tech lead quer uma função única e testada em src/plugins/compartilhado/uf.ts, que qualquer plugin importe.",
+      "rules": [
+        "R1. src/plugins/compartilhado/uf.ts exporta normalizarUf(sigla): trim e maiúsculas; null e undefined viram \"\".",
+        "R2. Exporta UFS, as 27 siglas em ordem alfabética, e ehUfValida(sigla), que normaliza e devolve true só para uma das UFS.",
+        "R3. Arquivo puro, sem importar o Vendure; sem index.ts em src/plugins/compartilhado/ (não é plugin).",
+        "R4. Se normalizarUf já existir (outra issue pode ter criado), manter a assinatura e o comportamento e só acrescentar UFS e ehUfValida."
+      ],
+      "constraints": [
+        "Não alterar src/plugins/cupons/ nem src/vendure-config.ts.",
+        "Não mudar o comportamento de normalizarUf se ela já existir.",
+        "Não instalar dependências."
+      ],
+      "stack": "TypeScript puro, vitest (ver test/utils.test.ts).",
+      "acceptance": [
+        "test/uf.test.ts com: R1 \" sp \" vira \"SP\"; R1 null vira \"\"; R2 ehUfValida(\"sp\") true e ehUfValida(\"XX\") false; R2 UFS com 27 siglas.",
+        "npm test verde."
+      ],
+      "verification": "npm test && npx tsc --noEmit"
     },
     "comments": []
   }

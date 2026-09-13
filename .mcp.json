@@ -3,7 +3,16 @@
     "board": {
       "type": "stdio",
       "command": "node",
-      "args": ["tools/board-mcp/src/index.js"]
+      "args": [
+        "tools/board-mcp/src/index.js"
+      ]
+    },
+    "revisor": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "tools/revisor-mcp/src/index.js"
+      ]
     }
   }
 }
