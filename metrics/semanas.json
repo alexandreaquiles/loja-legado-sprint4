@@ -1,0 +1,118 @@
+{
+  "time": "loja",
+  "nota": "Dados simulados para a aula: 12 semanas. Semanas 1-4 = baseline sem IA. Semana 5 = adoção do Claude Code. Semana 9 = guardrails no loop (lint + testes no hook) e revisão por IA.",
+  "marcos": {
+    "5": "adoção da IA",
+    "9": "guardrails no loop + revisão por IA"
+  },
+  "semanas": [
+    {
+      "semana": 1,
+      "prs": 6,
+      "lead_time_h": 52,
+      "incidentes": 1,
+      "rollbacks": 0,
+      "tokens_milhoes": 0,
+      "linhas_adicionadas": 900
+    },
+    {
+      "semana": 2,
+      "prs": 7,
+      "lead_time_h": 48,
+      "incidentes": 1,
+      "rollbacks": 0,
+      "tokens_milhoes": 0,
+      "linhas_adicionadas": 1100
+    },
+    {
+      "semana": 3,
+      "prs": 5,
+      "lead_time_h": 55,
+      "incidentes": 0,
+      "rollbacks": 0,
+      "tokens_milhoes": 0,
+      "linhas_adicionadas": 800
+    },
+    {
+      "semana": 4,
+      "prs": 6,
+      "lead_time_h": 50,
+      "incidentes": 1,
+      "rollbacks": 0,
+      "tokens_milhoes": 0,
+      "linhas_adicionadas": 950
+    },
+    {
+      "semana": 5,
+      "prs": 11,
+      "lead_time_h": 61,
+      "incidentes": 2,
+      "rollbacks": 1,
+      "tokens_milhoes": 18,
+      "linhas_adicionadas": 3900
+    },
+    {
+      "semana": 6,
+      "prs": 14,
+      "lead_time_h": 70,
+      "incidentes": 3,
+      "rollbacks": 1,
+      "tokens_milhoes": 27,
+      "linhas_adicionadas": 5200
+    },
+    {
+      "semana": 7,
+      "prs": 13,
+      "lead_time_h": 74,
+      "incidentes": 3,
+      "rollbacks": 2,
+      "tokens_milhoes": 31,
+      "linhas_adicionadas": 4800
+    },
+    {
+      "semana": 8,
+      "prs": 15,
+      "lead_time_h": 78,
+      "incidentes": 4,
+      "rollbacks": 2,
+      "tokens_milhoes": 35,
+      "linhas_adicionadas": 5600
+    },
+    {
+      "semana": 9,
+      "prs": 14,
+      "lead_time_h": 40,
+      "incidentes": 1,
+      "rollbacks": 1,
+      "tokens_milhoes": 33,
+      "linhas_adicionadas": 4100
+    },
+    {
+      "semana": 10,
+      "prs": 16,
+      "lead_time_h": 31,
+      "incidentes": 0,
+      "rollbacks": 0,
+      "tokens_milhoes": 30,
+      "linhas_adicionadas": 3700
+    },
+    {
+      "semana": 11,
+      "prs": 17,
+      "lead_time_h": 26,
+      "incidentes": 0,
+      "rollbacks": 0,
+      "tokens_milhoes": 29,
+      "linhas_adicionadas": 3400
+    },
+    {
+      "semana": 12,
+      "prs": 18,
+      "lead_time_h": 24,
+      "incidentes": 0,
+      "rollbacks": 0,
+      "tokens_milhoes": 28,
+      "linhas_adicionadas": 3300
+    }
+  ]
+}

@@ -7,7 +7,9 @@ Loja em **Vendure 3.7** (TypeScript, NestJS, GraphQL, TypeORM) com SQLite. Dinhe
 ## Comandos
 
 ```bash
-npm test          # vitest, ~1 s (obrigatório antes de dizer que terminou)
+npm run verify    # guardrails (regras hard) + vitest, ~2 s (obrigatório antes de dizer que terminou)
+npm test          # só o vitest
+npm run metricas  # painel de adoção do time (metrics/semanas.json)
 npm run dev       # server em :3000 + worker + dashboard (/dashboard, superadmin/superadmin)
 npm run setup     # recria .env e vendure.sqlite a partir do seed
 node tools/board-mcp/cli.js   # ver o board de issues no terminal
@@ -23,6 +25,8 @@ src/misc/preco.ts          helpers antigos (aplicarDesconto, frete); o financeir
 src/stuff/, src/utils/     legado da migração; não criar nada aqui
 test/                      vitest, um arquivo por feature; ctx e order são objetos falsos, sem banco
 tools/board-mcp/           board de issues do time (MCP local; as specs vivem lá, não aqui)
+tools/guardrails.js        regras hard do time como código (roda nos hooks e no CI)
+docs/regras-do-time.md     regras hard (máquina) e soft (revisão)
 node_modules/@vendure/core/dist/config/promotion/   exemplos oficiais de PromotionCondition e
                            PromotionAction: leia min-order-amount-condition.js e
                            order-percentage-discount-action.js antes de escrever os seus
@@ -44,5 +48,5 @@ node_modules/@vendure/core/dist/config/promotion/   exemplos oficiais de Promoti
 - Ler ou commitar `.env`.
 - Apagar ou recriar `vendure.sqlite`; rodar migrations ou ligar `synchronize`.
 - Criar endpoint, entidade ou migration para a tarefa atual: é só promoção.
-- Declarar a tarefa concluída sem `npm test` verde.
+- Declarar a tarefa concluída sem `npm run verify` verde.
 - Trabalhar direto na `main`; cada issue em sua branch/worktree (`claude -w loja-2`).
