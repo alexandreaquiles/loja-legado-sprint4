@@ -1,0 +1,174 @@
+[
+  {
+    "id": "LOJA-1",
+    "title": "US-01 Cupom com teto de desconto",
+    "state": "done",
+    "priority": "high",
+    "labels": ["backend"],
+    "blocked_by": [],
+    "files": ["src/plugins/cupons/regras.ts", "src/plugins/cupons/promocoes.ts", "src/plugins/cupons/cupons.plugin.ts", "test/cupom.test.ts"],
+    "spec": {
+      "context": "Entregue na Sprint 1. Plugin src/plugins/cupons/ com a action desconto_percentual_com_teto (teto de 30%) e a condition cupom_unico.",
+      "rules": [
+        "Teto de 30% para percentual",
+        "Action devolve negativo em centavos",
+        "Um cupom por pedido"
+      ],
+      "constraints": [
+        "Não alterar src/misc/preco.ts.",
+        "Não reimplementar o que a Promotion nativa já faz (código, datas, limites de uso)."
+      ],
+      "stack": "Vendure 3.7, TypeScript, vitest",
+      "acceptance": ["test/cupom.test.ts verde"],
+      "verification": "npm test"
+    },
+    "comments": [{ "body": "Mergeado em main. 10 testes.", "at": "2026-10-02T12:00:00Z" }]
+  },
+  {
+    "id": "LOJA-2",
+    "title": "US-02 Frete grátis por região (Sul e Sudeste)",
+    "state": "todo",
+    "priority": "high",
+    "labels": ["backend"],
+    "blocked_by": [],
+    "files": ["src/plugins/regiao/index.ts", "src/plugins/regiao/regiao.plugin.ts", "src/plugins/regiao/promocoes.ts", "src/plugins/regiao/regras.ts", "src/plugins/compartilhado/uf.ts", "test/regiao.test.ts"],
+    "spec": {
+      "context": "O marketing quer uma promoção de frete grátis só para entregas no Sul e no Sudeste. O Vendure já tem a action free_shipping e a condition minimum_order_amount; o que falta é uma condition que olhe o estado do endereço de entrega. O marketing monta a promoção no dashboard combinando as três; esta issue entrega só a condition, como plugin novo.",
+      "rules": [
+        "R1. Criar o plugin src/plugins/regiao/ (index.ts exporta `plugin`; o registro.ts liga sozinho) com a condition regiao_da_entrega.",
+        "R2. Argumento `estados` (string): siglas separadas por vírgula, ex.: \"SP,RJ,MG,ES,PR,SC,RS\". Comparação com trim e maiúsculas: \" sp \" vale como SP.",
+        "R3. check devolve true quando order.shippingAddress.province (sigla), normalizada, está na lista.",
+        "R4. Sem endereço de entrega, ou province vazia, devolve false (o pedido ainda não escolheu entrega).",
+        "R5. A normalização da sigla (trim e maiúsculas) fica em src/plugins/compartilhado/uf.ts, função normalizarUf, pura e sem Vendure, para outros plugins usarem (se o arquivo já existir, reutilize); a regra de pertencimento fica em src/plugins/regiao/regras.ts, também pura.",
+        "R6. code em snake_case, description em pt_BR e en; a condition SOMA às nativas via config.promotionOptions.promotionConditions."
+      ],
+      "constraints": [
+        "Não alterar src/plugins/cupons/ nem src/vendure-config.ts.",
+        "Não criar action de frete: usar a free_shipping nativa na promoção do dashboard.",
+        "Não instalar dependências; não tocar em vendure.sqlite nem criar migration.",
+        "Não criar index.ts em src/plugins/compartilhado/: não é plugin (o registro.ts só liga pastas com index.ts)."
+      ],
+      "stack": "Vendure 3.7, TypeScript, vitest com ctx e order falsos (ver test/cupom.test.ts e node_modules/@vendure/core/dist/config/promotion/conditions/).",
+      "acceptance": [
+        "test/regiao.test.ts com pelo menos: R3 SP na lista; R3 BA fora da lista; R2 \" sp \" normalizado; R4 sem shippingAddress; R6 registro soma à lista nativa.",
+        "npm test verde, incluindo os 15 testes existentes."
+      ],
+      "verification": "npm test && npx tsc --noEmit"
+    },
+    "comments": []
+  },
+  {
+    "id": "LOJA-3",
+    "title": "US-03 Cupom só na primeira compra",
+    "state": "backlog",
+    "priority": "medium",
+    "labels": ["backend"],
+    "blocked_by": [],
+    "files": [],
+    "spec": {
+      "context": "O cupom BEMVINDO é de boas-vindas e só pode valer para quem nunca comprou na loja. Hoje qualquer cliente usa. O Vendure tem perCustomerUsageLimit, mas ele limita quantas vezes o mesmo cliente usa o cupom, não se ele já fez pedidos antes.",
+      "rules": [],
+      "constraints": [],
+      "stack": "",
+      "acceptance": [],
+      "verification": ""
+    },
+    "comments": [{ "body": "Rascunho da Sicrana (PO): só o contexto. Falta a spec (regras, restrições, stack, critérios de aceite, verificação e files) antes de ir para todo.", "at": "2026-10-26T12:00:00Z" }]
+  },
+  {
+    "id": "LOJA-4",
+    "title": "US-04 Relatório de cupons usados por cliente (CSV)",
+    "state": "todo",
+    "priority": "medium",
+    "labels": ["backend"],
+    "blocked_by": ["LOJA-3"],
+    "files": ["src/plugins/relatorio/index.ts", "src/plugins/relatorio/relatorio.plugin.ts", "src/plugins/relatorio/relatorio.ts", "test/relatorio.test.ts"],
+    "spec": {
+      "context": "O financeiro quer exportar quantas vezes cada cliente usou cada cupom. Os dados já existem: todo Order tem couponCodes e customer. Entra como query no Admin API (relatorioCupons: String), devolvendo CSV.",
+      "rules": [
+        "R1. Criar src/plugins/relatorio/relatorio.ts exportando relatorioCsv(pedidos) que recebe uma lista de { customerEmail, couponCodes } e devolve CSV com cabeçalho cliente,codigo,usos.",
+        "R2. Linhas ordenadas por cliente e depois por codigo; codigo normalizado com trim e maiúsculas.",
+        "R3. Lista vazia devolve só o cabeçalho.",
+        "R4. O plugin expõe a query relatorioCupons no Admin API, que lê os pedidos com orderPlacedAt via OrderService e chama relatorioCsv."
+      ],
+      "constraints": [
+        "Sem dependências (nada de biblioteca de CSV).",
+        "Dinheiro, se aparecer, em centavos inteiros.",
+        "Não alterar src/plugins/primeira-compra/."
+      ],
+      "stack": "Vendure 3.7, TypeScript, vitest.",
+      "acceptance": ["test/relatorio.test.ts com R1, R2 e R3.", "npm test verde."],
+      "verification": "npm test"
+    },
+    "comments": []
+  },
+  {
+    "id": "LOJA-5",
+    "title": "Melhorar o sistema de cupons",
+    "state": "todo",
+    "priority": "urgent",
+    "labels": ["backend"],
+    "blocked_by": [],
+    "files": [],
+    "spec": {
+      "context": "A Sicrana (PO) disse que os clientes acham os cupons confusos e que o financeiro reclamou de novo. Precisa melhorar isso urgente para a Black Friday.",
+      "rules": [],
+      "constraints": [],
+      "stack": "",
+      "acceptance": ["Deve funcionar bem e ficar mais claro."],
+      "verification": ""
+    },
+    "comments": []
+  },
+  {
+    "id": "LOJA-6",
+    "title": "US-06 Frete por região também no cálculo do frete",
+    "state": "todo",
+    "priority": "medium",
+    "labels": ["backend"],
+    "blocked_by": ["LOJA-2"],
+    "files": ["src/plugins/regiao/regras.ts", "src/plugins/regiao/frete.ts", "src/plugins/regiao/regiao.plugin.ts", "test/regiao.test.ts"],
+    "spec": {
+      "context": "Depois da LOJA-2, a logística quer um ShippingCalculator frete_por_regiao com valor diferente por região, reaproveitando a lista de estados de src/plugins/regiao/regras.ts e o normalizarUf de src/plugins/compartilhado/uf.ts. ATENÇÃO: toca os mesmos arquivos da LOJA-2; nunca rodar em paralelo com ela.",
+      "rules": [
+        "R1. ShippingCalculator frete_por_regiao com argumentos sulSudeste e demais (centavos inteiros).",
+        "R2. Reutiliza listaDeEstados (regras.ts) e normalizarUf (compartilhado/uf.ts); registrado pelo mesmo plugin regiao em shippingOptions.shippingCalculators, somando aos nativos."
+      ],
+      "constraints": ["Manter os testes atuais de test/regiao.test.ts verdes."],
+      "stack": "Vendure 3.7, TypeScript, vitest.",
+      "acceptance": ["Novos testes em test/regiao.test.ts para R1 e R2.", "npm test verde."],
+      "verification": "npm test"
+    },
+    "comments": []
+  },
+  {
+    "id": "LOJA-7",
+    "title": "US-07 Sigla de estado normalizada em um lugar só",
+    "state": "todo",
+    "priority": "high",
+    "labels": ["backend"],
+    "blocked_by": [],
+    "files": ["src/plugins/compartilhado/uf.ts", "test/uf.test.ts"],
+    "spec": {
+      "context": "O marketing cadastrou promoções com \" sp\" e \"Sp\" e elas não valem em todo lugar: cada trecho de código trata a sigla do estado do seu jeito, e ninguém confere se a sigla existe. O tech lead quer uma função única e testada em src/plugins/compartilhado/uf.ts, que qualquer plugin importe.",
+      "rules": [
+        "R1. src/plugins/compartilhado/uf.ts exporta normalizarUf(sigla): trim e maiúsculas; null e undefined viram \"\".",
+        "R2. Exporta UFS, as 27 siglas em ordem alfabética, e ehUfValida(sigla), que normaliza e devolve true só para uma das UFS.",
+        "R3. Arquivo puro, sem importar o Vendure; sem index.ts em src/plugins/compartilhado/ (não é plugin).",
+        "R4. Se normalizarUf já existir (outra issue pode ter criado), manter a assinatura e o comportamento e só acrescentar UFS e ehUfValida."
+      ],
+      "constraints": [
+        "Não alterar src/plugins/cupons/ nem src/vendure-config.ts.",
+        "Não mudar o comportamento de normalizarUf se ela já existir.",
+        "Não instalar dependências."
+      ],
+      "stack": "TypeScript puro, vitest (ver test/utils.test.ts).",
+      "acceptance": [
+        "test/uf.test.ts com: R1 \" sp \" vira \"SP\"; R1 null vira \"\"; R2 ehUfValida(\"sp\") true e ehUfValida(\"XX\") false; R2 UFS com 27 siglas.",
+        "npm test verde."
+      ],
+      "verification": "npm test && npx tsc --noEmit"
+    },
+    "comments": []
+  }
+]

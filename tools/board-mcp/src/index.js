@@ -5,23 +5,19 @@
 // Os dados ficam FORA das branches, em .git/board/issues.json (o git-common-dir é compartilhado
 // por todos os worktrees), exatamente como um board de verdade vive fora do repositório.
 // Seed: tools/board-mcp/data/issues.seed.json. Reset: node tools/board-mcp/cli.js reset
+// As regras (transições, claim duplo, bloqueio, sobreposição de files) estão em board.js; o lock, em store.js.
 import { createInterface } from 'node:readline';
-
-const STATES = ['backlog', 'todo', 'in_progress', 'in_review', 'done', 'blocked'];
-const PRIO = { urgent: 0, high: 1, medium: 2, low: 3 };
-
-import { load, save } from './store.js';
-
-const brief = (i) => ({ id: i.id, title: i.title, state: i.state, priority: i.priority, blocked_by: i.blocked_by, files: i.files });
+import { load, update } from './store.js';
+import { STATES, listar, obter, mover, comentar, salvarSpec } from './board.js';
 
 // ---- tools -----------------------------------------------------------------
 const tools = [
   {
     name: 'list_issues',
     description:
-      'Lists issues of the board, optionally filtered by state. ' +
-      'Use this to pick the next issue to work on: set unblocked_only=true to hide issues whose blockers are not done. ' +
-      'Returns id, title, state, priority, blocked_by and the files each issue touches (never the full spec). Sorted by priority.',
+      'Lists issues of the board, optionally filtered by state, sorted by priority (then by id). ' +
+      'Use this to pick the next issue to work on: set unblocked_only=true to hide issues whose blockers are not done, and list state=in_progress to see which files are already being touched. ' +
+      'Returns id, title, state, priority, blocked_by and the files each issue touches (never the full spec).',
     inputSchema: {
       type: 'object',
       properties: {
@@ -29,36 +25,23 @@ const tools = [
         unblocked_only: { type: 'boolean', description: 'true = only issues whose blocked_by are all done (default false).' },
       },
     },
-    handler: ({ state, unblocked_only }) => {
-      const all = load();
-      const done = new Set(all.filter((i) => i.state === 'done').map((i) => i.id));
-      const out = all
-        .filter((i) => !state || i.state === state)
-        .filter((i) => !unblocked_only || (i.blocked_by ?? []).every((b) => done.has(b)))
-        .sort((a, b) => PRIO[a.priority] - PRIO[b.priority])
-        .map(brief);
-      return { issues: out, count: out.length };
-    },
+    handler: (args) => listar(load(), args),
   },
   {
     name: 'get_issue',
     description:
-      'Returns one issue with its full spec (context, rules, constraints, stack, acceptance criteria, verification) and comments. ' +
-      'Use this after choosing an issue and before planning. ' +
-      'The spec is written by humans: if a section is missing or vague, treat the issue as not ready.',
+      'Returns one issue with its full spec (context, rules, constraints, stack, acceptance, verification), files and comments. ' +
+      'Use this after claiming an issue and before planning. ' +
+      'The spec is written by humans: if a section is missing or vague, the issue is not ready.',
     inputSchema: { type: 'object', properties: { id: { type: 'string', description: 'Issue id, e.g. "LOJA-2".' } }, required: ['id'] },
-    handler: ({ id }) => {
-      const issue = load().find((i) => i.id === id);
-      if (!issue) throw new Error(`issue ${id} não existe`);
-      return issue;
-    },
+    handler: ({ id }) => obter(load(), id),
   },
   {
     name: 'update_issue_state',
     description:
-      'Moves an issue to a new state. Use it at the start of work (in_progress), when the work is ready for review (in_review), ' +
-      'when it cannot proceed (blocked, with a comment explaining why) or after merge (done). ' +
-      'Returns the issue id and the new state. Refuses to move to in_progress an issue whose blockers are not done.',
+      'Moves an issue to a new state: in_progress to claim it right after choosing, in_review when delivered, blocked when it cannot proceed (with a comment), done after merge. ' +
+      'Use it as soon as you pick an issue, so no other session takes it. ' +
+      'Returns from/to; refuses with an explanation when the issue is already in that state (another session claimed it), the transition is invalid, a blocker is not done, or another in_progress issue touches the same files.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -67,47 +50,27 @@ const tools = [
       },
       required: ['id', 'state'],
     },
-    handler: ({ id, state }) => {
-      const all = load();
-      const issue = all.find((i) => i.id === id);
-      if (!issue) throw new Error(`issue ${id} não existe`);
-      const done = new Set(all.filter((i) => i.state === 'done').map((i) => i.id));
-      const pending = (issue.blocked_by ?? []).filter((b) => !done.has(b));
-      if (state === 'in_progress' && pending.length) throw new Error(`${id} está bloqueada por ${pending.join(', ')} (não done)`);
-      const from = issue.state;
-      issue.state = state;
-      issue.updated_at = new Date().toISOString();
-      save(all);
-      return { id, from, to: state };
-    },
+    handler: ({ id, state }) => update((issues) => mover(issues, id, state)),
   },
   {
     name: 'add_comment',
     description:
-      'Adds a comment to an issue. Use it to leave the delivery summary when moving to in_review ' +
-      '(what was implemented, files touched, acceptance checklist, how to verify) or to explain why an issue is blocked. ' +
+      'Adds a comment to an issue. ' +
+      'Use it to leave the delivery summary when moving to in_review (what was implemented, files touched, acceptance checklist, how to verify) or to list the questions when an issue is blocked. ' +
       'Returns the number of comments.',
     inputSchema: {
       type: 'object',
       properties: { id: { type: 'string' }, body: { type: 'string', description: 'Markdown, max 1500 chars.' } },
       required: ['id', 'body'],
     },
-    handler: ({ id, body }) => {
-      const all = load();
-      const issue = all.find((i) => i.id === id);
-      if (!issue) throw new Error(`issue ${id} não existe`);
-      issue.comments = issue.comments ?? [];
-      issue.comments.push({ body: String(body).slice(0, 1500), at: new Date().toISOString() });
-      save(all);
-      return { id, comments: issue.comments.length };
-    },
+    handler: ({ id, body }) => update((issues) => comentar(issues, id, body)),
   },
   {
     name: 'save_issue_spec',
     description:
-      'Replaces the spec sections of an issue (context, rules, constraints, stack, acceptance, verification, files). ' +
-      'Use it only when a human asks to rewrite or complete a spec. ' +
-      'Returns the issue id and which sections are now filled.',
+      'Replaces spec sections of an issue (context, rules, constraints, stack, acceptance, verification) and, optionally, its files. ' +
+      'Use it only when a human asks to write, rewrite or complete a spec; it never changes the state. ' +
+      'Returns the state, which sections are filled and which are still missing.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -124,16 +87,7 @@ const tools = [
       },
       required: ['id', 'spec'],
     },
-    handler: ({ id, spec, files }) => {
-      const all = load();
-      const issue = all.find((i) => i.id === id);
-      if (!issue) throw new Error(`issue ${id} não existe`);
-      issue.spec = { ...issue.spec, ...spec };
-      if (files) issue.files = files;
-      issue.updated_at = new Date().toISOString();
-      save(all);
-      return { id, filled: Object.entries(issue.spec).filter(([, v]) => v && (Array.isArray(v) ? v.length : true)).map(([k]) => k) };
-    },
+    handler: ({ id, spec, files }) => update((issues) => salvarSpec(issues, id, spec, files)),
   },
 ];
 
@@ -152,7 +106,7 @@ rl.on('line', (line) => {
       reply({
         protocolVersion: params?.protocolVersion ?? '2025-06-18',
         capabilities: { tools: {} },
-        serverInfo: { name: 'board', version: '1.0.0' },
+        serverInfo: { name: 'board', version: '1.1.0' },
         instructions: 'Board de issues do time loja. Specs vivem nas issues; o estado vive no board, não no código.',
       });
     } else if (method === 'ping') {
