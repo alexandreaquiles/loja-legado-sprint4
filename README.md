@@ -6,7 +6,7 @@ Este é o repositório do projeto prático da Sprint 4, a última do programa. A
 
 | | |
 |---|---|
-| Board do projeto (Trello) | https://trello.com/b/WCP19qe8 |
+| Board do projeto (Trello) | https://trello.com/b/yFkUiJLJ |
 | Curso base na Alura | [IA na engenharia de software: guardrails de qualidade e estratégias de adoção](https://cursos.alura.com.br/course/ia-engenharia-software-guardrails-qualidade-estrategias-adocao) (6h estimadas) |
 | Lançamento | segunda, 02/11/2026 |
 | Aula ao vivo | quinta, 12/11/2026, 9h–10h |
