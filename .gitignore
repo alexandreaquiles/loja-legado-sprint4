@@ -7,3 +7,7 @@ static/email/test-emails
 .claude/settings.local.json
 .claude/.loop-count
 .claude/worktrees/
+# gerados pelo npm run dev (codegen do dashboard, cache do router, cache de imagens)
+src/gql/
+.tanstack/
+static/assets/cache/
