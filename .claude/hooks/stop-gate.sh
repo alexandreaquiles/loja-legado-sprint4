@@ -4,7 +4,7 @@
 # Sessão que não deve ser empurrada a corrigir (Bloco 1, revisão): claude --settings .claude/settings.sem-hooks.json
 # Três freios:
 #   1. plan mode: planejar não é implementar; sai 0 sem rodar nada (os testes podem estar vermelhos de propósito).
-#   2. circuit breaker: no máximo MAX_VOLTAS bloqueios seguidos; depois devolve para o humano.
+#   2. circuit breaker: no máximo MAX_VOLTAS bloqueios seguidos; depois devolve para o humano (aviso em systemMessage).
 #   3. stop_hook_active: false = primeira tentativa de parar deste turno, então o contador zera.
 #      (O próprio Claude Code corta depois de 8 bloqueios seguidos; o nosso freio vem antes.)
 set -uo pipefail
@@ -38,7 +38,9 @@ N=$(( $(cat "$COUNT_FILE" 2>/dev/null || echo 0) + 1 ))
 
 if [ "$N" -gt "$MAX_VOLTAS" ]; then
   rm -f "$COUNT_FILE"
-  echo "stop-gate: circuit breaker depois de $MAX_VOLTAS voltas. npm run verify ainda falha; devolvendo para o humano." >&2
+  # Exit 0 deixa o turno terminar, e aí o stderr não aparece: o aviso vai em stdout, como JSON com
+  # systemMessage, que o Claude Code mostra para você (https://code.claude.com/docs/en/hooks, "JSON output").
+  printf '{"systemMessage":"stop-gate: circuit breaker depois de %s voltas; npm run verify ainda vermelho, devolvendo para você."}\n' "$MAX_VOLTAS"
   exit 0
 fi
 
