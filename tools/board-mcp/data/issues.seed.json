@@ -153,7 +153,7 @@
         "R1. src/plugins/relatorio/relatorio.ts exporta relatorioCsv(pedidos), que recebe uma lista de { customerEmail, couponCodes } e devolve CSV com exatamente as colunas cliente,codigo,usos (cabeçalho na primeira linha, separador vírgula, linhas com \\n).",
         "R2. O código do cupom é normalizado com trim e maiúsculas antes de contar: \" alura10\" e \"ALURA10\" são o mesmo cupom. Código vazio depois de normalizar não conta.",
         "R3. Linhas ordenadas por cliente e depois por código. Lista vazia devolve só o cabeçalho. Pedido sem e-mail de cliente (visitante) fica fora.",
-        "R4. CSV seguro para planilha: campo com vírgula, aspas ou quebra de linha vai entre aspas (aspas internas dobradas); campo que começa com =, +, -, @, tab ou CR recebe um apóstrofo (') na frente, para a planilha não executar fórmula.",
+        "R4. CSV seguro para planilha: campo com vírgula, aspas ou quebra de linha vai entre aspas (aspas internas dobradas); campo que começa com =, +, -, @, tab ou CR recebe um apóstrofo (') na frente e vai entre aspas, para a planilha não executar fórmula (OWASP, CSV Injection).",
         "R5. O plugin expõe no Admin API a query relatorioCupons(inicio: DateTime!, fim: DateTime!): String!, com @Allow(Permission.ReadOrder). Ela lê pelo OrderService todos os pedidos com orderPlacedAt no período, filtrando na consulta (filter orderPlacedAt between) e percorrendo todas as páginas (skip/take até totalItems), com a relação customer, e chama relatorioCsv."
       ],
       "constraints": [

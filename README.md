@@ -21,7 +21,7 @@ git clone https://github.com/alexandreaquiles/loja-legado-sprint4.git
 cd loja-legado-sprint4
 npm install          # ~2 minutos e ~800 MB: o Vendure inteiro vem em node_modules
 npm run setup        # branches locais, .env (segredos falsos), vendure.sqlite, board e npm install em tools/revisor-mcp
-npm run verify       # guardrails (0 violações, 6 regras hard) + 25 testes verdes, em ~2 segundos
+npm run verify       # guardrails (0 violações, 6 regras hard) + 25 testes verdes (a primeira execução pode passar de 20 s)
 node tools/board-mcp/cli.js   # o board no terminal: LOJA-4 em in_review
 npm run conferir     # confere os cards 00 a 04: no começo só o 00 fica todo ✔
 claude               # abre o agente; aceite confiar na pasta
@@ -63,11 +63,11 @@ O `stop-gate.sh` segura o fim de cada turno enquanto `npm run verify` estiver ve
 claude --settings .claude/settings.sem-hooks.json
 ```
 
-O arquivo só tem `{"disableAllHooks": true}`, que tem precedência sobre os hooks do projeto (`claude --settings '{"disableAllHooks": true}'` faz o mesmo; o arquivo evita brigar com aspas no Windows). Continuam valendo o deny do `.env`, os servidores MCP, as skills e o subagente.
+O arquivo só tem `{"disableAllHooks": true}`, que tem precedência sobre os hooks do projeto (`claude --settings '{"disableAllHooks": true}'` faz o mesmo; o arquivo evita brigar com aspas no Windows). Desliga **todos** os hooks, não só o stop-gate: o `guard.sh` (que barra `grep -r` na raiz, `rm -rf`, `git reset --hard`, `npm install`…) e o `test-after-edit.sh` também saem. Continuam valendo o deny do Read/Edit do `.env`, os servidores MCP, as skills e o subagente. Por isso essa sessão é só para ler e revisar: nada de comando destrutivo nela.
 
 ## Revisão em duas camadas
 
-`/review-pr feature/relatorio-descontos`, de uma sessão sem hooks:
+`/review-pr feature/relatorio-descontos`, digitado numa sessão sem hooks (a skill tem `disable-model-invocation: true`: o agente não a chama sozinho quando alguém pergunta se o PR está pronto):
 
 1. **Camada determinística:** `node tools/guardrails.js --ref <branch>` e `npm test` num worktree temporário. Violação hard, teste vermelho ou pulado: REQUEST_CHANGES, sem gastar a camada 2.
 2. **Camada de julgamento:** o subagente `revisor-codigo` (só lê; `model: sonnet`) recebe a issue do board e o diff e revisa contra as regras soft. Ele é do mesmo fornecedor do modelo que provavelmente escreveu o código: ajuda, mas não é a revisão cruzada com um modelo treinado de outro jeito.

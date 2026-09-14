@@ -15,8 +15,8 @@ Os ids `R-0N` e `ADR-00N` são os mesmos do servidor MCP `revisor` (`tools/revis
 | sem-console-log | Nenhum `console.log` em `src/` | R-05 | regex |
 | sem-dependencias-novas | Sem dependência de runtime além das do Vendure | ADR-003 | `dependencies` do `package.json` contra a lista do create |
 | dinheiro-em-centavos | Dinheiro em centavos inteiros | ADR-001 | regex de `toFixed(2)` e literais com duas casas |
-| teste-com-assert | Todo `it()`/`test()` compara algo | R-07 | um `expect(...)` real dentro do bloco (não `expect(true)`) |
-| sem-skip | Nenhum teste pulado | R-07 | regex de `it.skip`, `test.skip`, `describe.skip`, `.todo` |
+| teste-com-assert | Todo `it()`/`test()` compara algo | política do time (a R-07 fala do estilo dos testes) | um `expect(...)` real dentro do bloco (não `expect(true)`) |
+| sem-skip | Nenhum teste pulado | política do time (a R-07 fala do estilo dos testes) | regex de `it.skip`, `test.skip`, `describe.skip`, `.todo` |
 
 Comandos:
 
@@ -38,32 +38,33 @@ Até a Sprint 3 o time tratava "função com no máximo 40 linhas" como regra ha
 - O mesmo curso questiona a regra (aula «Qualidade de código»): "métodos longos podem ser vantajosos para a IA, pois ela opera sobre o que está no contexto", as restrições de tamanho "tendem a afrouxar com o tempo" e "Precisamos mesmo que todos os métodos sejam pequenos?". Também pede razoabilidade: rigor onde o sistema é crítico, menos onde não é, para não gastar energia com *nitpicking*.
 - E avisa sobre calibrar (aula «Análise estática»): com regras demais, "o agente entrará em um laço infinito e não entregará nada, ou entregará com um custo maior". Hard é o que "não queremos nunca quebrar".
 
-Decisão deste time: a lista hard fica com o que tem custo real quando escapa (segredo vazado, dinheiro errado, dependência fora da política, teste que não testa). Tamanho de função é gosto e contexto; num agente com stop-gate, uma regra hard de 40 linhas faz o modelo picar a função só para passar no contador, sem ganho para quem lê. A função de 55 linhas do PR da LOJA-4 continua sendo um achado, só que da revisão: o problema dela é fazer tudo à mão, sem teste da normalização, e inventar um campo fora da spec, não o número de linhas. Se o seu time decidir o contrário, mover `funcao-longa` de `AVISOS` para `REGRAS` é uma linha, e a decisão vale uma ADR.
+Decisão deste time: a lista hard fica com o que tem custo real quando escapa (segredo vazado, dinheiro errado, dependência fora da política, teste que não testa). Tamanho de função é gosto e contexto; num agente com stop-gate, uma regra hard de 40 linhas faz o modelo picar a função só para passar no contador, sem ganho para quem lê. Uma função longa num PR continua podendo ser um achado, só que da revisão: o problema, quando existe, é misturar responsabilidades ou esconder uma regra sem teste, não o número de linhas. Se o seu time decidir o contrário, mover `funcao-longa` de `AVISOS` para `REGRAS` é uma linha, e a decisão vale uma ADR.
 
 ## Regras soft (revisão, exigem julgamento)
 
 Spec e arquitetura
-- Cada regra e cada restrição da issue no board tem código e teste correspondentes. Campo, coluna ou parâmetro que a spec não pede é achado (ex.: um valor calculado que ninguém pediu).
+- Cada regra e cada restrição da issue no board tem código e teste correspondentes. Campo, coluna, parâmetro ou comportamento que a spec não pede é achado.
 - Decisões de arquitetura seguem as ADRs aceitas (`docs/adr/`) e as regras do Vendure: plugin por domínio, nunca reimplementar a `Promotion`, actions e conditions puras (R-03, R-04, R-06). Mudança de ADR é PR separado.
 - Antes de escrever uma função nova, procurar equivalente existente (`src/plugins/*/regras.ts`, `src/plugins/compartilhado/`, o próprio Vendure). Não duplicar normalização, cálculo de subtotal, formatação.
 - Função longa (aviso `funcao-longa`): quebrar quando mistura responsabilidades ou esconde uma regra sem teste; não quebrar só pelo número.
 
 Dados e consultas
-- Consulta filtra no banco, não na memória: filtro de data ou estado vai no `ListQueryOptions` (`filter`) e a leitura percorre **todas** as páginas (`skip`/`take` até `totalItems`). `take: 500` com `.filter()` depois perde pedidos sem erro nenhum.
+- Consulta filtra no banco, não na memória, e lê tudo o que a spec pede: com os serviços do Vendure, o filtro vai no `ListQueryOptions` e a leitura respeita a paginação (`skip`/`take`, `totalItems`).
 - Nada de `any` explícito no código dos plugins; parâmetros validados na borda (schema GraphQL, args da action), não no meio.
 
 Segurança e privacidade
 - O código não expõe segredo por outro caminho (log, mensagem de erro, retorno, header para terceiros) (R-02).
 - Plugin não faz chamada de rede por conta própria; integração com outro sistema é decisão de arquitetura, com ADR.
-- Dado pessoal de cliente (e-mail, nome, endereço) não sai da loja para outro sistema sem base legal e decisão registrada (LGPD).
-- CSV aberto em planilha: campo que começa com `=`, `+`, `-`, `@`, tab ou CR é neutralizado (apóstrofo na frente), além de aspas para vírgula, aspas e quebra de linha (injeção de fórmula, OWASP "CSV Injection").
+- Dado pessoal de cliente não é compartilhado com terceiros sem base legal e decisão registrada (LGPD).
+- Arquivo exportado para planilha segue o escape que a spec define e a recomendação da OWASP para "CSV Injection".
 - Erros de negócio como `ErrorResult` do GraphQL (padrão do Vendure), nunca `throw` com mensagem solta; mensagens não expõem dados internos.
 
 Testes (seção 2 do curso, aula «Testes automatizados»)
 - O teste exercita o **comportamento** descrito na spec, não a implementação; cobre limites (vazio, um, muitos) e o caminho de erro.
 - Um teste por classe de equivalência; teste repetido é custo de manutenção.
 - Mock só de fronteira externa (rede, relógio, `OrderService` falso). Não mockar as próprias regras.
-- Pelo menos um teste de caso de uso pela borda (resolver ou condition com um serviço falso), não só a função pura. Um `expect` fraco (`expect(csv.length > 0).toBe(true)`) passa na regra `teste-com-assert` e não prova nada: é achado de revisão.
+- Pelo menos um teste de caso de uso pela borda (resolver ou condition com um serviço falso), não só a função pura.
+- Um `expect` que compara pouco demais passa na regra `teste-com-assert` e não prova o comportamento: é achado de revisão. O teste compara o resultado exato que a spec descreve.
 
 ## O que só produção mostra (guardrails do outro lado)
 
