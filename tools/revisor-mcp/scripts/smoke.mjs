@@ -9,7 +9,7 @@
 // Tokens estimados = caracteres / 4, arredondado à centena (a mesma conta de revisao/numeros-sprint2.json).
 // Inventário = soma de JSON.stringify({ name, title, description, inputSchema }) de cada tool: é o que o
 // cliente recebe no tools/list. Com o tool search do Claude Code ligado (padrão), só os nomes entram no
-// contexto no início; com ENABLE_TOOL_SEARCH=false entra tudo (.claude/settings.demo-inchado.json).
+// contexto no início; com ENABLE_TOOL_SEARCH=false entra tudo (na Sprint 2, com o settings da demo do inventário inchado).
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
