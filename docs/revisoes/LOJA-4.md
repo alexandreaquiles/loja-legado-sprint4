@@ -30,7 +30,7 @@ Esta é a revisão de referência. Ela registra as duas passagens da `/review-pr
 
 **Vira hard?**
 
-- paginação com `take` fixo e filtro depois: não, porque decidir se a consulta traz tudo exige entender a query; um check de `take: \d{3,}` daria falso positivo em consultas limitadas de propósito. Fica soft, com exemplo em `docs/regras-do-time.md`.
+- paginação com `take` fixo e filtro depois: não, porque decidir se a consulta traz tudo exige entender a query; um check de `take: \d{3,}` daria falso positivo em consultas limitadas de propósito. Fica soft; o exemplo entrou em `docs/regras-do-time.md` ("Exemplos que vieram das revisões"), para o revisor achar sozinho no próximo PR.
 - CSV sem neutralizar fórmula: não como regex (o escape pode estar em qualquer lugar); sim como teste: o critério de aceite exige o caso `=HYPERLINK` e o `teste-com-assert` garante que ele compara algo.
 - `fetch` dentro de plugin: sim, check `sem-fetch-em-plugin`, regex `\bfetch\(` no alvo `plugins`; na `main` dá 0 (conferido com `--ref main`).
 - dado pessoal para fora: não, porque exige saber o que é dado pessoal e para onde vai; o `sem-fetch-em-plugin` pega o caminho mais comum.

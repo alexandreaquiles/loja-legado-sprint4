@@ -75,3 +75,13 @@ Testes (seção 2 do curso, aula «Testes automatizados»)
 ## Como esta lista evolui
 
 Quando um problema passar pela revisão ou chegar à produção, a pergunta é: **dava para virar regra hard?** Se dá para escrever o check sem falso positivo na `main`, entra no `guardrails.js` no mesmo PR da correção. Se não dá, entra aqui com um exemplo, e o contexto do revisor melhora para o próximo PR. Regra que ninguém quebra há 6 meses, ou que só gera ruído, pode ser rebaixada (foi o caso da `funcao-curta`).
+
+## Exemplos que vieram das revisões
+
+Acrescentados depois da revisão da LOJA-4 (`docs/revisoes/LOJA-4.md`), para o revisor achar sozinho no próximo PR. Na `main` da sprint, esta seção ainda não existe: escrevê-la é o passo 5 da tarefa 03.
+
+- Dados e consultas: `findAll(ctx, { take: 500 })` com o filtro de data num `.filter()` depois perde pedidos sem erro nenhum; o filtro vai em `filter` e a leitura percorre as páginas até `totalItems`.
+- Privacidade: um resolver que manda o CSV com o e-mail de cada cliente para um serviço externo a cada consulta.
+- CSV: campo que começa com `=`, `+`, `-`, `@`, tab ou CR recebe apóstrofo e vai entre aspas; vírgula, aspas e quebra de linha vão entre aspas.
+- Spec: uma coluna calculada que a spec não pede (`valorEstimado`) e uma transformação que ela não pede (e-mail em minúsculas).
+- Testes: `expect(csv.length > 0).toBe(true)` passa na `teste-com-assert` e não prova o cabeçalho; compare o CSV exato.

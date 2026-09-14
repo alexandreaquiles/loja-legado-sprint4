@@ -12,7 +12,7 @@ export function normalizarCodigo(codigo: string | null | undefined): string {
 }
 
 /**
- * R4: campo seguro para planilha. Começa com =, +, -, @, tab ou CR: apóstrofo na frente, para a planilha não
+ * R4: campo seguro para planilha. Começa com =, +, -, @, tab ou CR: apóstrofo na frente e entre aspas, para a planilha não
  * executar fórmula (OWASP, CSV Injection). Vírgula, aspas ou quebra de linha: entre aspas, com aspas dobradas.
  */
 export function campoCsv(valor: string | number): string {
