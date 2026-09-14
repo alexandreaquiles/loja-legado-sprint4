@@ -153,13 +153,13 @@ card('00', 'Preparar o ambiente', () => {
   else if (['in_progress', 'done'].includes(l4?.state)) r.push(ok(`board: ${ISSUE} em ${l4.state} (a revisão já andou; node tools/board-mcp/cli.js reset volta ao início)`));
   else r.push(falha(`board: ${ISSUE} em ${l4?.state ?? '?'}`, 'node tools/board-mcp/cli.js reset'));
 
-  if (branchAtual() === PR) {
-    r.push(pendente(`você está na ${PR}: aqui o npm run verify fica vermelho de propósito`, 'o card 00 confere a main: git checkout main && npm run conferir -- 00'));
+  const g = guardrails();
+  if (branchAtual() === PR && !(g.rodou && g.violacoes === 0)) {
+    r.push(pendente(`você está na ${PR} antes da correção: aqui o npm run verify fica vermelho`, 'o card 00 confere a main: git checkout main && npm run conferir -- 00'));
     return r;
   }
-  const g = guardrails();
   if (!g.rodou) r.push(falha('tools/guardrails.js não rodou', g.motivo));
-  else r.push(g.violacoes === 0 ? ok(`guardrails: 0 violações (${g.regras} regras hard)`) : falha(`guardrails: ${g.violacoes} violação(ões) nesta branch`, 'node tools/guardrails.js mostra arquivo e linha'));
+  else r.push(g.violacoes === 0 ? ok(`guardrails: 0 violações (${g.regras} regras hard)${branchAtual() === PR ? ` na ${PR} (já corrigida no card 02)` : ''}`) : falha(`guardrails: ${g.violacoes} violação(ões) nesta branch`, 'node tools/guardrails.js mostra arquivo e linha'));
   const t = rodarTestes();
   if (!t.rodou) r.push(falha('npm test não rodou', t.motivo || 'veja a saída de npm test'));
   else if (t.verde) r.push(ok(`npm test: ${t.passaram} testes verdes em ${virgula(t.segundos)} s: npm run verify verde`));
@@ -175,11 +175,15 @@ card('01', 'Sentir o problema: o PR com testes verdes', () => {
   r.push(ok(g.violacoes
     ? `guardrails da main na branch do PR: ${g.violacoes} violações em ${idsDe(g).length} regras hard (${idsDe(g).join(', ')}), sem checkout: node tools/guardrails.js --ref ${PR}`
     : `a branch do PR já passa nos guardrails (corrigida no card 02); o que eles pegavam está no histórico: git log ${PR}`));
-  if (g.avisos?.length) r.push(ok(`${g.avisos.length} aviso(s) soft na branch do PR (${[...new Set(g.avisos.map((a) => a.regra))].join(', ')}): não bloqueiam; ver "Calibração" em docs/regras-do-time.md`));
+  r.push(ok(g.avisos?.length
+    ? `${g.avisos.length} aviso(s) soft na branch do PR (${[...new Set(g.avisos.map((a) => a.regra))].join(', ')}): não bloqueiam; ver "Calibração" em docs/regras-do-time.md`
+    : '0 avisos soft na branch do PR (node tools/guardrails.js --avisos)'));
   const teste = naRef(PR, TESTE_PR) ?? '';
   const pulados = (teste.match(/\b(it|test|describe)\.(skip|todo)\(/g) ?? []).length;
-  if (pulados) r.push(ok(`${TESTE_PR} na branch do PR tem ${pulados} teste(s) pulado(s): "verde" no npm test não diz o que ficou de fora`));
-  r.push(ok('o que a máquina não pega (rede, dado pessoal, paginação, CSV, campo fora da spec) é da revisão: card 03'));
+  r.push(ok(pulados
+    ? `${TESTE_PR} na branch do PR tem ${pulados} teste(s) pulado(s): "verde" no npm test não diz o que ficou de fora`
+    : `${TESTE_PR} na branch do PR sem teste pulado`));
+  r.push(ok('o resto você acha revisando o diff contra a spec da LOJA-4 (node tools/board-mcp/cli.js show LOJA-4); a revisão em duas camadas é o card 03'));
   return r;
 });
 

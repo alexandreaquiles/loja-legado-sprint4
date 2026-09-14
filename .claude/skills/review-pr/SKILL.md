@@ -1,11 +1,14 @@
 ---
 name: review-pr
-description: Revisa uma branch (PR) da loja-legado em duas camadas, sem editar código. Camada 1 determinística (tools/guardrails.js --ref e npm test num worktree temporário); camada 2 de julgamento pelo subagente revisor-codigo contra a issue do board e docs/regras-do-time.md. Termina com APPROVE ou REQUEST_CHANGES, a pergunta "vira hard?" e o registro em docs/revisoes/. Use quando pedirem para revisar uma branch ou um PR, ou perguntarem se algo está pronto para merge.
+disable-model-invocation: true
+description: Revisa uma branch (PR) da loja-legado em duas camadas, sem editar código. Camada 1 determinística (tools/guardrails.js --ref e npm test num worktree temporário); camada 2 de julgamento pelo subagente revisor-codigo contra a issue do board e docs/regras-do-time.md. Termina com APPROVE ou REQUEST_CHANGES, a pergunta "vira hard?" e o registro em docs/revisoes/. Só roda quando o humano digita /review-pr <branch> [ID].
 ---
 
 # Revisar um PR
 
-Autor garante, revisor confirma. Esta skill é a confirmação: ela **nunca edita código** nem faz checkout na sua árvore de trabalho. Rode-a de uma sessão sem o stop-gate, que empurraria o agente a "corrigir": `claude --settings .claude/settings.sem-hooks.json`.
+Autor garante, revisor confirma. Esta skill é a confirmação: ela **nunca edita código** nem faz checkout na sua árvore de trabalho. Rode-a de uma sessão sem o stop-gate, que empurraria o agente a "corrigir": `claude --settings .claude/settings.sem-hooks.json`. Nessa sessão o `guard.sh` também fica desligado: rode só os comandos desta skill.
+
+A skill tem `disable-model-invocation: true`: o modelo não a carrega sozinho (uma pergunta como "está pronto para merge?" não a dispara); ela roda quando alguém digita `/review-pr`.
 
 Entrada: o nome da branch (ex.: `feature/relatorio-descontos`) e, se houver, o id da issue (ex.: `LOJA-4`). Sem branch, pergunte.
 
