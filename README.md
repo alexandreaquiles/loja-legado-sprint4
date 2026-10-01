@@ -92,12 +92,12 @@ Copie o board do Trello para a sua conta e mova os cards. Resumo:
 | 02 | Guardrails no loop: a branch do PR até `npm run verify` verde, sem enfraquecer teste | Essencial |
 | 03 | Revisão em duas camadas: `/review-pr` e o registro em `docs/revisoes/LOJA-4.md` | Essencial |
 | 04 | Medir sem vaidade: `npm run metricas` e a sua leitura em `docs/painel-leitura.md` | Essencial |
-| 05 | Intermediária: uma regra hard em uma linha (feito na aula ao vivo) | Intermediária |
+| 05 | Intermediária: uma regra hard em uma linha (por conta; não entra na aula ao vivo) | Intermediária |
 | 06 | Desafio em 3 níveis, no seu repositório ou no `loja-legado` | Desafio |
 
 Cada card termina com `npm run conferir -- NN`: ✔ feito, ✘ falta, … depende de outro card. É feedback, não nota: nada ali usa LLM nem lê o seu `.env`.
 
-As tarefas essenciais são as que o professor resolve ao vivo na quinta. Tente antes: a aula rende muito mais quando você já esbarrou no problema.
+As tarefas essenciais são as que o professor mostra na aula de quinta; a Intermediária fica para você, com o gabarito no card. Tente antes: a aula rende muito mais quando você já esbarrou no problema.
 
 ## Branches
 
