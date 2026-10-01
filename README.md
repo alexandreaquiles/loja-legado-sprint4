@@ -10,7 +10,7 @@ Este é o repositório do projeto prático da Sprint 4, a última do programa. A
 | Curso base na Alura | [IA na engenharia de software: guardrails de qualidade e estratégias de adoção](https://cursos.alura.com.br/course/ia-engenharia-software-guardrails-qualidade-estrategias-adocao) (6h estimadas) |
 | Lançamento | segunda, 02/11/2026 |
 | Aula ao vivo | quinta, 12/11/2026, 9h–10h |
-| Entrega do Desafio | sexta, 13/11/2026, no Discord da turma |
+| Entrega do Desafio | sexta, 13/11/2026, por pull request neste repositório |
 
 ## Preparar o ambiente
 
@@ -107,7 +107,15 @@ As tarefas essenciais são as que o professor resolve ao vivo na quinta. Tente a
 
 ## Como entregar o Desafio
 
-Poste no Discord da turma até a sexta que fecha a sprint, com o template do card "Como entregar" no Trello. Não poste código, métricas, políticas ou nomes internos da sua empresa: anonimize ou use o `loja-legado`.
+Por pull request neste repositório, até a sexta que fecha a sprint:
+
+1. Faça fork deste repositório e crie a branch `desafio/<seu-usuario>`.
+2. Copie `entregas/TEMPLATE.md` para `entregas/<seu-usuario>.md` e preencha. Fez no `loja-legado`? O código vai na mesma PR. Fez no repositório do seu time? Só o relatório anonimizado, sem código.
+3. Abra a PR para a `main` com o título `[Desafio S4] <seu-usuario> · N1 N2 N3` (os níveis que você declara) e marque a autoavaliação.
+
+O CI (`verify`) roda na PR; uma PR só com o relatório passa. A PR não é mergeada: é a vitrine da entrega, e os níveis são autodeclarados pela rubrica do card 06.
+
+**A PR é pública.** Não coloque nela código, métricas, políticas ou nomes internos da sua empresa: anonimize ou use o `loja-legado`; na dúvida, deixe de fora.
 
 ## Licença
 
